@@ -1012,6 +1012,26 @@ def download_page():
     return render_template('download.html')
 
 
+@web_bp.route('/download/debug')
+def download_debug():
+    """Debug: Afficher la structure des répertoires"""
+    import os
+    
+    root_path = current_app.root_path
+    parent_path = os.path.abspath(os.path.join(root_path, '..'))
+    
+    debug_info = {
+        'root_path': root_path,
+        'parent_path': parent_path,
+        'root_contents': os.listdir(root_path) if os.path.exists(root_path) else [],
+        'parent_contents': os.listdir(parent_path) if os.path.exists(parent_path) else [],
+        'linux_script_exists': os.path.exists(os.path.join(parent_path, 'run_p2p_linux.sh')),
+        'windows_script_exists': os.path.exists(os.path.join(parent_path, 'run_p2p_windows.bat')),
+    }
+    
+    return jsonify(debug_info)
+
+
 @web_bp.route('/download/linux')
 def download_linux():
     """Téléchargement du script d'installation Linux"""
