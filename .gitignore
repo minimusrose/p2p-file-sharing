@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+data/tracker.db
+data/peer_cache.db
+
+# Logs
+*.log
+logs/
+*.pid
+
+# Data folders (fichiers partagés locaux)
+data/shared_files/*
+data/downloads/*
+data/peer2_shared_files/*
+data/peer2_downloads/*
+
+# Garder les dossiers mais pas leur contenu
+!data/shared_files/.gitkeep
+!data/downloads/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Env files
+.env
+.env.local
+*.local
+
+# Temporary
+temp/
+tmp/
+*.temp

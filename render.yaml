@@ -1,0 +1,25 @@
+services:
+  # Tracker Web Service
+  - type: web
+    name: p2p-tracker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python -m tracker.app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 5000
+    plan: free
+    
+  # Static site for download page
+  - type: web
+    name: p2p-download-page
+    env: static
+    buildCommand: ""
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /download_page.html
+    plan: free

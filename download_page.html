@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Télécharger P2P File Sharing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .download-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+        .download-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .os-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero text-center">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3">
+                <i class="bi bi-cloud-arrow-down"></i> Télécharger P2P File Sharing
+            </h1>
+            <p class="lead mb-4">
+                Partagez vos fichiers en toute liberté avec le réseau P2P décentralisé
+            </p>
+            <a href="#download" class="btn btn-light btn-lg">
+                <i class="bi bi-download"></i> Télécharger Maintenant
+            </a>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col">
+                    <h2 class="fw-bold">Choisissez votre système d'exploitation</h2>
+                    <p class="text-muted">Installation en un clic pour tous les systèmes</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Windows -->
+                <div class="col-md-4">
+                    <div class="card download-card border-primary">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-windows os-icon text-primary"></i>
+                            <h3 class="card-title fw-bold">Windows</h3>
+                            <p class="text-muted mb-4">Windows 7/8/10/11</p>
+                            <a href="run_p2p_windows.bat" download class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-download"></i> Télécharger
+                            </a>
+                            <small class="text-muted d-block">~7 KB • .bat</small>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small>
+                                <i class="bi bi-info-circle"></i> Double-cliquez pour installer
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linux -->
+                <div class="col-md-4">
+                    <div class="card download-card border-success">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-ubuntu os-icon text-success"></i>
+                            <h3 class="card-title fw-bold">Linux</h3>
+                            <p class="text-muted mb-4">Ubuntu, Debian, Fedora...</p>
+                            <a href="run_p2p_linux.sh" download class="btn btn-success btn-lg w-100 mb-3">
+                                <i class="bi bi-download"></i> Télécharger
+                            </a>
+                            <small class="text-muted d-block">~9 KB • .sh</small>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small>
+                                <i class="bi bi-terminal"></i> chmod +x && ./run_p2p_linux.sh
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- macOS -->
+                <div class="col-md-4">
+                    <div class="card download-card border-secondary">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-apple os-icon text-secondary"></i>
+                            <h3 class="card-title fw-bold">macOS</h3>
+                            <p class="text-muted mb-4">macOS 10.14+</p>
+                            <a href="run_p2p_linux.sh" download class="btn btn-secondary btn-lg w-100 mb-3">
+                                <i class="bi bi-download"></i> Télécharger
+                            </a>
+                            <small class="text-muted d-block">~9 KB • .sh</small>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small>
+                                <i class="bi bi-terminal"></i> Même script que Linux
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installation rapide -->
+            <div class="row mt-5">
+                <div class="col-md-8 offset-md-2">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h4 class="card-title fw-bold mb-3">
+                                <i class="bi bi-lightning-charge"></i> Installation en une commande
+                            </h4>
+                            <p class="text-muted">Pour les utilisateurs avancés :</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Linux/macOS :</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control font-monospace" 
+                                           value="curl -sSL https://votre-site.com/install.sh | bash" 
+                                           id="linuxCmd" readonly>
+                                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('linuxCmd')">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label fw-bold">Windows (PowerShell) :</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control font-monospace" 
+                                           value="iwr -useb https://votre-site.com/install.ps1 | iex" 
+                                           id="winCmd" readonly>
+                                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('winCmd')">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col">
+                    <h2 class="fw-bold">Comment ça marche ?</h2>
+                    <p class="text-muted">Démarrez en 3 étapes simples</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="step-number mb-3">1</div>
+                        <h5 class="fw-bold">Télécharger</h5>
+                        <p class="text-muted">
+                            Téléchargez le script correspondant à votre système d'exploitation
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="step-number mb-3">2</div>
+                        <h5 class="fw-bold">Installer</h5>
+                        <p class="text-muted">
+                            Exécutez le script. Il installe automatiquement Python et les dépendances
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <div class="step-number mb-3">3</div>
+                        <h5 class="fw-bold">Partager</h5>
+                        <p class="text-muted">
+                            Placez vos fichiers dans le dossier de partage et c'est tout !
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col">
+                    <h2 class="fw-bold">Fonctionnalités</h2>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 fw-bold">Décentralisé</h5>
+                        <p class="text-muted">Aucun serveur central. Vos données restent chez vous.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="bi bi-lightning-charge text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 fw-bold">Rapide</h5>
+                        <p class="text-muted">Fragmentation intelligente pour les gros fichiers.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="bi bi-lock text-danger" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 fw-bold">Sécurisé</h5>
+                        <p class="text-muted">Fichiers privés avec contrôle d'accès.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="bi bi-code-square text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 fw-bold">Open Source</h5>
+                        <p class="text-muted">Code source disponible sur GitHub.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <h2 class="text-center fw-bold mb-5">Questions Fréquentes</h2>
+
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Ai-je besoin de Python installé ?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Non ! Le script vérifie et vous guide pour installer Python si nécessaire.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Est-ce gratuit ?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Oui, totalement gratuit et open source. Pas de frais cachés, pas d'abonnement.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Quelle taille de fichiers puis-je partager ?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Aucune limite ! Les fichiers de plus de 1 GB sont automatiquement fragmentés et distribués sur le réseau.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Mes fichiers sont-ils publics ?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Par défaut, oui. Mais vous pouvez marquer des fichiers comme "privés" et choisir qui peut y accéder.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyToClipboard(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            document.execCommand('copy');
+            
+            // Feedback visuel
+            const button = input.nextElementSibling;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

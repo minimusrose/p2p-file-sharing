@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - Tracker P2P{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h1 class="display-4">
+            <i class="bi bi-graph-up"></i> Statistiques Détaillées
+        </h1>
+    </div>
+</div>
+
+<!-- Statistiques Globales -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-primary">Peers Inscrits</h5>
+                <p class="display-5">{{ stats.total_peers_registered }}</p>
+                <small class="text-muted">Total historique</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h5 class="card-title text-success">Peers En Ligne</h5>
+                <p class="display-5">{{ online_peers_count }}</p>
+                <small class="text-muted">Sur {{ total_peers_count }} actifs</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h5 class="card-title text-info">Fichiers Partagés</h5>
+                <p class="display-5">{{ stats.total_files_shared }}</p>
+                <small class="text-muted">Actuellement disponibles</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title text-warning">Téléchargements</h5>
+                <p class="display-5">{{ stats.total_downloads }}</p>
+                <small class="text-muted">Total effectués</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Volume de données -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-hdd-stack"></i> Volume de Données Transféré
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="display-4">{{ stats.total_bytes_transferred | filesizeformat }}</p>
+                <small class="text-muted">Total depuis le début</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Fichiers les plus téléchargés -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy"></i> Top 10 Fichiers
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_files %}
+                    <div class="list-group">
+                        {% for file in top_files %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ file.name }}</h6>
+                                    <small class="text-muted">
+                                        {{ file.size | filesizeformat }} - Par {{ file.owner.name }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">
+                                    <i class="bi bi-download"></i> {{ file.download_count }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucun téléchargement enregistré
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Téléchargements récents -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Téléchargements Récents
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% if recent_downloads %}
+                    <div class="list-group">
+                        {% for download in recent_downloads %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ download.file.name if download.file else 'Fichier supprimé' }}</h6>
+                                        <small class="text-muted">
+                                            De: {{ download.source_peer.name if download.source_peer else 'Inconnu' }}
+                                            → {{ download.destination_peer.name if download.destination_peer else 'Inconnu' }}
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> {{ download.started_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        {% if download.status == 'completed' %}
+                                            <span class="badge bg-success">Terminé</span>
+                                        {% elif download.status == 'failed' %}
+                                            <span class="badge bg-danger">Échoué</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ download.status }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucun téléchargement récent
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informations système -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Informations Système
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Dernière mise à jour</dt>
+                    <dd class="col-sm-9">{{ stats.last_updated.strftime('%d/%m/%Y %H:%M:%S') }}</dd>
+                    
+                    <dt class="col-sm-3">Version</dt>
+                    <dd class="col-sm-9">Tracker v1.0.0</dd>
+                    
+                    <dt class="col-sm-3">Base de données</dt>
+                    <dd class="col-sm-9">SQLite</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh toutes les 10 secondes
+    setTimeout(() => {
+        location.reload();
+    }, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - P2P File Sharing{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Stats Cards -->
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-peers">0</div>
+            <div class="stat-label">
+                <i class="fas fa-users me-2"></i>
+                Peers Connectés
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="stat-value" id="stat-files">0</div>
+            <div class="stat-label">
+                <i class="fas fa-file me-2"></i>
+                Fichiers Partagés
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="stat-value" id="stat-my-files">0</div>
+            <div class="stat-label">
+                <i class="fas fa-folder me-2"></i>
+                Mes Fichiers
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+            <div class="stat-value" id="stat-downloads">0</div>
+            <div class="stat-label">
+                <i class="fas fa-download me-2"></i>
+                Téléchargements
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Peers en ligne -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-users me-2"></i>
+                Peers en Ligne
+            </div>
+            <div class="card-body">
+                <div id="peers-list">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Chargement...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activité récente -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-clock me-2"></i>
+                Activité Récente
+            </div>
+            <div class="card-body">
+                <div id="recent-activity">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Chargement...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- État du tracker -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-server me-2"></i>
+                État du Tracker
+            </div>
+            <div class="card-body">
+                <div id="tracker-status">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Vérification de la connexion...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadDashboard();
+    
+    // Rafraîchir toutes les 10 secondes
+    setInterval(loadDashboard, 10000);
+});
+
+function loadDashboard() {
+    loadStats();
+    loadPeers();
+    loadTrackerStatus();
+    loadRecentActivity();
+}
+
+// Charger les statistiques
+function loadStats() {
+    $.get('/api/statistics', function(data) {
+        if (data.success && data.statistics) {
+            const stats = data.statistics;
+            
+            // Fichiers partagés (total dans le réseau)
+            if (stats.cache) {
+                $('#stat-files').text(stats.cache.total_files || 0);
+            }
+            
+            // Mes fichiers (fichiers locaux)
+            if (stats.files) {
+                $('#stat-my-files').text(stats.files.total_files || 0);
+            }
+            
+            // Téléchargements
+            if (stats.downloads) {
+                $('#stat-downloads').text(stats.downloads.total_downloads || 0);
+            }
+        }
+    });
+    
+    $.get('/api/peers/all', function(data) {
+        if (data.success) {
+            const onlinePeers = data.peers.filter(p => p.is_online).length;
+            $('#stat-peers').text(onlinePeers);
+        }
+    });
+}
+
+// Charger la liste des peers
+function loadPeers() {
+    $.get('/api/peers/all', function(data) {
+        if (data.success) {
+            renderPeersList(data.peers);
+        }
+    }).fail(function() {
+        $('#peers-list').html('<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Impossible de charger la liste des peers</div>');
+    });
+}
+
+function renderPeersList(peers) {
+    if (peers.length === 0) {
+        $('#peers-list').html('<div class="text-muted text-center py-3">Aucun autre peer connecté</div>');
+        return;
+    }
+    
+    let html = '<div class="list-group list-group-flush">';
+    peers.forEach(function(peer) {
+        const statusClass = peer.is_online ? 'status-online' : 'status-offline';
+        const statusText = peer.is_online ? 'En ligne' : 'Hors ligne';
+        
+        html += '<div class="list-group-item">';
+        html += '<div class="d-flex justify-content-between align-items-center">';
+        html += '<div>';
+        html += '<span class="' + statusClass + '"></span>';
+        html += '<strong>' + peer.name + '</strong>';
+        html += '<br><small class="text-muted">' + peer.ip_address + ':' + peer.port + '</small>';
+        html += '</div>';
+        html += '<span class="badge bg-' + (peer.is_online ? 'success' : 'secondary') + '">' + statusText + '</span>';
+        html += '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+    
+    $('#peers-list').html(html);
+}
+
+// Charger l'état du tracker
+function loadTrackerStatus() {
+    $.get('/api/tracker/status', function(data) {
+        if (data.success && data.status) {
+            if (data.status.is_connected) {
+                const lastHeartbeat = data.status.last_heartbeat ? 
+                    new Date(data.status.last_heartbeat * 1000).toLocaleTimeString() : 'N/A';
+                
+                $('#tracker-status').html(`
+                    <div class="d-flex align-items-center">
+                        <span class="status-online me-3"></span>
+                        <div>
+                            <strong>Connecté au tracker</strong>
+                            <br>
+                            <small class="text-muted">Dernier heartbeat: ${lastHeartbeat}</small>
+                        </div>
+                    </div>
+                `);
+            } else {
+                const attempts = data.status.reconnect_attempts || 0;
+                const error = data.status.error_message || 'Tentative de reconnexion en cours...';
+                
+                $('#tracker-status').html(`
+                    <div class="alert alert-danger mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Déconnecté du tracker</strong>
+                        <br>
+                        <small>${error} (Tentatives: ${attempts})</small>
+                    </div>
+                `);
+            }
+        }
+    }).fail(function() {
+        $('#tracker-status').html(`
+            <div class="alert alert-danger mb-0">
+                <i class="fas fa-times-circle me-2"></i>
+                Impossible de vérifier l'état du tracker
+            </div>
+        `);
+    });
+}
+
+// Charger l'activité récente
+function loadRecentActivity() {
+    $.get('/api/activity/recent', function(data) {
+        if (data.success && data.activities && data.activities.length > 0) {
+            renderActivity(data.activities);
+        } else {
+            $('#recent-activity').html('<div class="text-muted text-center py-3">Aucune activité récente</div>');
+        }
+    }).fail(function() {
+        $('#recent-activity').html('<div class="text-muted text-center py-3">Aucune activité récente</div>');
+    });
+}
+
+function renderActivity(activities) {
+    let html = '<div class="list-group list-group-flush">';
+    activities.forEach(function(activity) {
+        const icon = activity.type === 'upload' ? 'fa-upload' : 'fa-download';
+        const color = activity.type === 'upload' ? 'primary' : 'success';
+        
+        html += '<div class="list-group-item">';
+        html += '<i class="fas ' + icon + ' text-' + color + ' me-2"></i>';
+        html += '<strong>' + activity.file_name + '</strong>';
+        html += '<br><small class="text-muted">' + formatDate(activity.timestamp) + '</small>';
+        html += '</div>';
+    });
+    html += '</div>';
+    
+    $('#recent-activity').html(html);
+}
+</script>
+{% endblock %}

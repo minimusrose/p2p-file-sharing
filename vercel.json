@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "download_page.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "run_p2p_*.sh",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "run_p2p_*.bat",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/download_page.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

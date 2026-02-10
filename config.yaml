@@ -1,0 +1,91 @@
+# Configuration globale du système de partage de fichiers P2P
+
+# Configuration du Tracker (Serveur Central)
+tracker:
+  host: '0.0.0.0'
+  port: 5000
+  database:
+    uri: 'sqlite:///data/tracker.db'
+  heartbeat:
+    interval: 20  # secondes - fréquence des heartbeats des peers
+    timeout: 60   # secondes - après ce délai, un peer est considéré hors ligne
+  
+# Configuration du Peer (Application Client)
+peer:
+  host: '0.0.0.0'
+  port_range:
+    start: 5001
+    end: 5100
+  shared_folder: 'data/shared_files'
+  download_folder: 'data/downloads'
+  cache_database: 'data/peer_cache.db'
+  
+  # Scanner de fichiers
+  scanner:
+    auto_scan_interval: 30  # secondes - scanner automatique toutes les 30 secondes
+    watch_changes: true      # surveiller les changements en temps réel
+  
+  # Synchronisation avec le tracker
+  sync:
+    interval: 300            # secondes - sync cache toutes les 5 min
+    retry_connection: 30     # secondes - réessayer connexion tracker si down
+
+# Configuration du réseau UDP (Découverte locale)
+discovery:
+  enabled: true
+  broadcast_port: 5555
+  broadcast_interval: 30     # secondes - fréquence des annonces
+  peer_timeout: 60           # secondes - timeout pour considérer un peer inactif
+  multicast_group: '224.0.0.1'  # Optionnel - pour multicast au lieu de broadcast
+
+# Configuration de la fragmentation des fichiers
+chunking:
+  enabled: true
+  threshold_size: 10485760   # 10 MB - au-delà, fragmentation automatique
+  chunk_size: 1048576        # 1 MB par chunk (10 MB pour production)
+  max_concurrent_chunks: 5   # nombre max de chunks téléchargés simultanément
+  
+  # Fragmentation distribuée (nouveau)
+  min_file_size_for_distribution: 1073741824  # 1 GB - fichiers ≥ 1GB sont distribués
+  min_peers_for_distribution: 2  # minimum 2 peers pour activer la distribution
+  distribution_strategy: 'round_robin'  # 'round_robin' ou 'balanced'
+  auto_resume_downloads: true  # reprise automatique quand peers reviennent
+  resume_check_interval: 30  # secondes - vérifier peers manquants
+
+# Limites système
+limits:
+  max_file_size: 5368709120  # 5 GB
+  max_peers: 100
+  max_concurrent_downloads: 5
+  max_download_speed: 0  # 0 = illimité, sinon en KB/s
+
+# Sécurité
+security:
+  hash_algorithm: 'sha256'  # Algorithme de hachage : md5, sha1, sha256
+
+# Logs
+logging:
+  level: 'INFO'  # DEBUG, INFO, WARNING, ERROR
+  file: 'logs/app.log'
+  max_concurrent_downloads: 3
+  max_upload_speed: 0        # 0 = illimité, sinon en KB/s
+  max_download_speed: 0      # 0 = illimité, sinon en KB/s
+
+# Sécurité
+security:
+  hash_algorithm: 'sha256'   # md5, sha1, sha256
+  require_authentication: false  # pour future implémentation
+  allowed_file_extensions: []    # vide = tous, sinon liste: ['.pdf', '.docx']
+
+# Logs
+logging:
+  level: 'INFO'              # DEBUG, INFO, WARNING, ERROR
+  file: 'logs/app.log'
+  max_size: 10485760         # 10 MB
+  backup_count: 5
+
+# Interface Web
+web:
+  theme: 'light'             # light ou dark
+  items_per_page: 20
+  auto_refresh_interval: 5000  # millisecondes

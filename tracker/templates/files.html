@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Fichiers - Tracker P2P{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- En-tête -->
+    <div class="col-12 mb-4">
+        <h1 class="display-4">
+            <i class="bi bi-folder"></i> Mes Fichiers
+        </h1>
+        <p class="lead text-muted">Partagez et téléchargez des fichiers sur le réseau P2P</p>
+    </div>
+
+    <!-- Zone d'upload -->
+    <div class="col-12 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> Partager un Fichier</h5>
+            </div>
+            <div class="card-body">
+                {% if online_peers_count == 0 %}
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Aucun peer connecté</h5>
+                    <p class="mb-2">
+                        Pour partager des fichiers, vous avez besoin d'au moins un peer connecté au réseau.
+                    </p>
+                    <hr>
+                    <h6>Comment faire ?</h6>
+                    <ol class="mb-0">
+                        <li><strong>Téléchargez l'application desktop</strong> (recommandé)</li>
+                        <li>Lancez un peer avec : <code>python -m peer.app</code></li>
+                        <li>Ou attendez qu'un autre utilisateur se connecte</li>
+                    </ol>
+                </div>
+                {% endif %}
+                
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Mode Web :</strong> Limité à 100 MB par fichier. 
+                    Pour les gros fichiers (≥1GB), <a href="#download-app" class="alert-link">téléchargez l'application desktop</a>.
+                </div>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">Sélectionner un fichier</label>
+                        <input type="file" class="form-control" id="fileInput" name="file" required>
+                        <div class="form-text">Taille maximale : 100 MB</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fileDescription" class="form-label">Description (optionnelle)</label>
+                        <input type="text" class="form-control" id="fileDescription" name="description" placeholder="Ex: Document de cours, Photo de vacances...">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
+                        <i class="bi bi-cloud-upload"></i> Partager ce fichier
+                    </button>
+                </form>
+                
+                <!-- Barre de progression -->
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             id="progressBar" 
+                             style="width: 0%">0%</div>
+                    </div>
+                    <small class="text-muted mt-2 d-block" id="uploadStatus">Préparation...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglets Mes Fichiers / Tous les Fichiers -->
+    <div class="col-12">
+        <ul class="nav nav-tabs mb-3" id="filesTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-files-tab" data-bs-toggle="tab" data-bs-target="#all-files" type="button" role="tab">
+                    <i class="bi bi-globe"></i> Tous les Fichiers ({{ files|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="my-files-tab" data-bs-toggle="tab" data-bs-target="#my-files" type="button" role="tab">
+                    <i class="bi bi-person-circle"></i> Mes Fichiers Partagés (<span id="myFilesCount">0</span>)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="filesTabContent">
+            <!-- Onglet: Tous les fichiers -->
+            <div class="tab-pane fade show active" id="all-files" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-cloud-download"></i> Fichiers Disponibles sur le Réseau</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filtres -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="searchInput" placeholder="🔍 Rechercher un fichier...">
+                            </div>
+                            <div class="col-md-6">
+                                <select class="form-select" id="filterPeer">
+                                    <option value="">Tous les peers</option>
+                                    {% for peer in peers %}
+                                    <option value="{{ peer.id }}">{{ peer.name }} ({{ peer.files_count }} fichiers)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                <!-- Table des fichiers -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="filesTable">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-file-earmark"></i> Fichier</th>
+                                <th><i class="bi bi-hdd"></i> Taille</th>
+                                <th><i class="bi bi-person"></i> Partagé par</th>
+                                <th><i class="bi bi-clock"></i> Date</th>
+                                <th><i class="bi bi-wifi"></i> Statut</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filesBody">
+                            {% if files %}
+                                {% for file in files %}
+                                <tr data-file-id="{{ file.id }}" data-peer-id="{{ file.owner_id }}">
+                                    <td>
+                                        <i class="bi bi-file-earmark-fill text-primary"></i>
+                                        <strong>{{ file.name }}</strong>
+                                    </td>
+                                    <td>{{ (file.size / 1024 / 1024) | round(2) }} MB</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ file.owner.name }}</span>
+                                    </td>
+                                    <td>{{ file.shared_at.strftime('%d/%m/%Y %H:%M') if file.shared_at else 'N/A' }}</td>
+                                    <td>
+                                        {% if file.owner.is_online(timeout) %}
+                                        <span class="badge bg-success"><i class="bi bi-circle-fill"></i> En ligne</span>
+                                        {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-circle"></i> Hors ligne</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if file.owner.is_online(timeout) %}
+                                        <button class="btn btn-sm btn-primary download-btn" 
+                                                data-file-id="{{ file.id }}"
+                                                data-file-name="{{ file.name }}"
+                                                data-peer-id="{{ file.owner_id }}"
+                                                data-peer-host="{{ file.owner.ip_address }}"
+                                                data-peer-port="{{ file.owner.port }}">
+                                            <i class="bi bi-download"></i> Télécharger
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-x-circle"></i> Indisponible
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-1"></i>
+                                        <p>Aucun fichier disponible sur le réseau</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet: Mes fichiers partagés -->
+            <div class="tab-pane fade" id="my-files" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-folder-check"></i> Mes Fichiers Partagés</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Comment ça marche ?</strong> 
+                            Les fichiers que vous uploadez via cette interface sont stockés sur un peer du réseau.
+                            Pour voir VOS fichiers locaux, lancez l'application peer desktop.
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><i class="bi bi-file-earmark"></i> Fichier</th>
+                                        <th><i class="bi bi-hdd"></i> Taille</th>
+                                        <th><i class="bi bi-clock"></i> Date d'upload</th>
+                                        <th><i class="bi bi-wifi"></i> Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myFilesBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox fs-1"></i>
+                                            <p>Vous n'avez pas encore partagé de fichiers via cette interface.</p>
+                                            <small>Utilisez le formulaire ci-dessus pour partager votre premier fichier !</small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section téléchargement app -->
+    <div class="col-12 mt-4" id="download-app">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5><i class="bi bi-laptop"></i> Pour une expérience complète</h5>
+                <p class="text-muted">Téléchargez l'application desktop pour partager des fichiers volumineux (≥1GB) avec fragmentation distribuée</p>
+                <button class="btn btn-outline-primary" disabled>
+                    <i class="bi bi-download"></i> Télécharger l'application
+                </button>
+                <small class="d-block mt-2 text-muted">Bientôt disponible pour Windows, Linux et macOS</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de téléchargement -->
+<div class="modal fade" id="downloadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-download"></i> Téléchargement en cours
+                </h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>Fichier :</strong> <span id="downloadFileName"></span></p>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         id="downloadProgressBar" 
+                         role="progressbar" 
+                         style="width: 0%">0%</div>
+                </div>
+                <small class="text-muted" id="downloadStatus">Connexion au peer...</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Upload de fichier
+const uploadForm = document.getElementById('uploadForm');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const progressDiv = document.getElementById('uploadProgress');
+const progressBar = document.getElementById('progressBar');
+const statusText = document.getElementById('uploadStatus');
+
+// Afficher le nom du fichier sélectionné
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        console.log('Fichier sélectionné:', file.name, file.size, 'bytes');
+        
+        // Vérifier la taille immédiatement
+        const maxSize = 100 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert(`❌ Fichier trop volumineux !\n\nTaille: ${(file.size / 1024 / 1024).toFixed(2)} MB\nMaximum: 100 MB\n\nPour les gros fichiers, téléchargez l'application desktop.`);
+            fileInput.value = '';
+            return;
+        }
+        
+        // Activer le bouton
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = `<i class="bi bi-cloud-upload"></i> Partager ${file.name}`;
+    }
+});
+
+uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Veuillez sélectionner un fichier');
+        return;
+    }
+    
+    console.log('Début de l\'upload:', file.name);
+    
+    // Afficher la progression
+    progressDiv.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+    progressBar.classList.add('progress-bar-animated');
+    progressBar.classList.remove('bg-success', 'bg-danger');
+    uploadBtn.disabled = true;
+    statusText.textContent = 'Préparation de l\'upload...';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('description', document.getElementById('fileDescription').value);
+    
+    try {
+        statusText.textContent = 'Upload en cours vers le serveur...';
+        progressBar.style.width = '30%';
+        progressBar.textContent = '30%';
+        
+        const response = await fetch('/files/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        progressBar.style.width = '70%';
+        progressBar.textContent = '70%';
+        statusText.textContent = 'Traitement du fichier...';
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur HTTP:', response.status, errorText);
+            
+            // Parser la réponse JSON si possible
+            try {
+                const errorData = JSON.parse(errorText);
+                
+                // Erreur spécifique : pas de peer
+                if (errorData.error === 'no_peer_available') {
+                    throw new Error('🚫 Aucun peer disponible\n\nPour partager des fichiers, vous devez :\n1. Télécharger l\'application desktop\n2. Lancer un peer sur votre machine\n\nOU attendre qu\'un autre utilisateur se connecte.');
+                }
+                
+                throw new Error(errorData.message || errorData.error || `Erreur ${response.status}`);
+            } catch (e) {
+                if (e.message.includes('peer')) throw e;
+                throw new Error(`Erreur serveur (${response.status})`);
+            }
+        }
+        
+        const data = await response.json();
+        console.log('Réponse serveur:', data);
+        
+        if (data.success) {
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-success');
+            statusText.textContent = `✅ Fichier partagé avec succès sur ${data.peer || 'le réseau'} !`;
+            
+            console.log('Upload réussi:', data);
+            
+            // Recharger la page après 3 secondes
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            throw new Error(data.error || 'Erreur inconnue');
+        }
+    } catch (error) {
+        console.error('Erreur upload complète:', error);
+        progressBar.classList.add('bg-danger');
+        progressBar.classList.remove('progress-bar-animated');
+        statusText.innerHTML = `❌ Erreur : ${error.message}<br><small>Détails dans la console (F12)</small>`;
+        uploadBtn.disabled = false;
+        
+        // Remettre le bouton dans son état initial après 5 secondes
+        setTimeout(() => {
+            progressDiv.style.display = 'none';
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Partager le fichier';
+        }, 5000);
+    }
+});
+
+// Téléchargement de fichier
+document.querySelectorAll('.download-btn').forEach(btn => {
+    btn.addEventListener('click', handleDownload);
+});
+
+// Recherche en temps réel
+document.getElementById('searchInput').addEventListener('input', filterFiles);
+document.getElementById('filterPeer').addEventListener('change', filterFiles);
+
+function filterFiles() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const selectedPeer = document.getElementById('filterPeer').value;
+    
+    document.querySelectorAll('#filesTable tbody tr').forEach(row => {
+        const fileName = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
+        const peerId = row.dataset.peerId || '';
+        
+        const matchSearch = fileName.includes(searchText);
+        const matchPeer = !selectedPeer || peerId === selectedPeer;
+        
+        row.style.display = (matchSearch && matchPeer) ? '' : 'none';
+    });
+}
+
+// Bouton de rafraîchissement manuel
+const refreshBtn = document.createElement('button');
+refreshBtn.className = 'btn btn-sm btn-outline-primary ms-2';
+refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Rafraîchir';
+refreshBtn.onclick = () => location.reload();
+document.querySelector('.d-flex.justify-content-between.align-items-center.mb-3')?.appendChild(refreshBtn);
+
+// Charger les fichiers de l'utilisateur
+async function loadMyFiles() {
+    try {
+        const response = await fetch('/api/my-uploaded-files');
+        const data = await response.json();
+        
+        if (data.success && data.files.length > 0) {
+            const tbody = document.getElementById('myFilesBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('myFilesCount').textContent = data.count;
+            
+            data.files.forEach(file => {
+                const uploadDate = new Date(file.uploaded_at);
+                const isOnline = file.is_online;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <i class="bi bi-file-earmark-fill text-primary"></i>
+                            <strong>${file.name}</strong>
+                        </td>
+                        <td>${(file.size / 1024 / 1024).toFixed(2)} MB</td>
+                        <td>${uploadDate.toLocaleString('fr-FR')}</td>
+                        <td>
+                            ${isOnline 
+                                ? '<span class="badge bg-success"><i class="bi bi-circle-fill"></i> En ligne</span>'
+                                : '<span class="badge bg-danger"><i class="bi bi-circle"></i> Hors ligne</span>'
+                            }
+                        </td>
+                        <td>
+                            ${isOnline
+                                ? `<button class="btn btn-sm btn-primary download-btn" 
+                                      data-file-id="${file.id}"
+                                      data-file-name="${file.name}">
+                                      <i class="bi bi-download"></i> Télécharger
+                                   </button>`
+                                : '<button class="btn btn-sm btn-secondary" disabled>Indisponible</button>'
+                            }
+                            <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Réattacher les event listeners
+            attachDownloadListeners();
+        } else {
+            document.getElementById('myFilesCount').textContent = '0';
+        }
+    } catch (error) {
+        console.error('Erreur chargement mes fichiers:', error);
+    }
+}
+
+// Fonction pour attacher les listeners de téléchargement
+function attachDownloadListeners() {
+    document.querySelectorAll('.download-btn').forEach(btn => {
+        btn.removeEventListener('click', handleDownload); // Éviter les doublons
+        btn.addEventListener('click', handleDownload);
+    });
+}
+
+function handleDownload(e) {
+    const btn = e.currentTarget;
+    const fileId = btn.dataset.fileId;
+    const fileName = btn.dataset.fileName;
+    
+    console.log('Téléchargement de:', fileName, 'ID:', fileId);
+    
+    // Ouvrir le modal
+    const modal = new bootstrap.Modal(document.getElementById('downloadModal'));
+    document.getElementById('downloadFileName').textContent = fileName;
+    modal.show();
+    
+    try {
+        // Télécharger via le tracker (proxy)
+        const downloadUrl = `/files/download/${fileId}`;
+        
+        document.getElementById('downloadStatus').textContent = 'Préparation du téléchargement...';
+        
+        // Créer un lien pour télécharger
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('Téléchargement déclenché pour:', downloadUrl);
+        
+        // Simuler la progression
+        let progress = 0;
+        const progressBar = document.getElementById('downloadProgressBar');
+        const statusText = document.getElementById('downloadStatus');
+        
+        statusText.textContent = 'Téléchargement en cours...';
+        
+        const interval = setInterval(() => {
+            progress += 15;
+            if (progress > 100) progress = 100;
+            
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                statusText.textContent = '✅ Téléchargement terminé !';
+                setTimeout(() => modal.hide(), 2000);
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erreur téléchargement:', error);
+        document.getElementById('downloadStatus').textContent = '❌ Erreur : ' + error.message;
+    }
+}
+
+// Charger les fichiers au chargement de la page
+loadMyFiles();
+
+// Attacher les listeners aux boutons existants
+attachDownloadListeners();
+
+console.log('Script de gestion des fichiers chargé');
+</script>
+{% endblock %}
