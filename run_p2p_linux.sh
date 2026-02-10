@@ -170,9 +170,9 @@ if [ "$MODE" = "full" ]; then
     TRACKER_URL="http://localhost:${TRACKER_PORT}"
 else
     # Mode peer uniquement
-    echo -n "URL du Tracker [http://localhost:5000] : "
+    echo -n "URL du Tracker [https://p2p-file-sharing-production.up.railway.app] : "
     read -r TRACKER_URL
-    TRACKER_URL=${TRACKER_URL:-http://localhost:5000}
+    TRACKER_URL=${TRACKER_URL:-https://p2p-file-sharing-production.up.railway.app}
     
     echo -n "Port du Peer [8001] : "
     read -r PEER_PORT

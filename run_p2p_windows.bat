@@ -140,8 +140,8 @@ if "%MODE%"=="full" (
     
     set TRACKER_URL=http://localhost:%TRACKER_PORT%
 ) else (
-    set /p TRACKER_URL="URL du Tracker [http://localhost:5000] : "
-    if "%TRACKER_URL%"=="" set TRACKER_URL=http://localhost:5000
+    set /p TRACKER_URL="URL du Tracker [https://p2p-file-sharing-production.up.railway.app] : "
+    if "%TRACKER_URL%"=="" set TRACKER_URL=https://p2p-file-sharing-production.up.railway.app
     
     set /p PEER_PORT="Port du Peer [8001] : "
     if "%PEER_PORT%"=="" set PEER_PORT=8001

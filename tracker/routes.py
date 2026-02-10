@@ -1002,3 +1002,55 @@ def upload_file():
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ==================== ROUTES DE TÉLÉCHARGEMENT ====================
+
+@web_bp.route('/download')
+def download_page():
+    """Page de téléchargement des applications desktop"""
+    return render_template('download.html')
+
+
+@web_bp.route('/download/linux')
+def download_linux():
+    """Téléchargement du script d'installation Linux"""
+    from flask import send_file
+    import os
+    
+    script_path = os.path.join(current_app.root_path, '..', 'run_p2p_linux.sh')
+    
+    if os.path.exists(script_path):
+        return send_file(
+            script_path,
+            as_attachment=True,
+            download_name='run_p2p_linux.sh',
+            mimetype='application/x-sh'
+        )
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'Fichier non trouvé'
+        }), 404
+
+
+@web_bp.route('/download/windows')
+def download_windows():
+    """Téléchargement du script d'installation Windows"""
+    from flask import send_file
+    import os
+    
+    script_path = os.path.join(current_app.root_path, '..', 'run_p2p_windows.bat')
+    
+    if os.path.exists(script_path):
+        return send_file(
+            script_path,
+            as_attachment=True,
+            download_name='run_p2p_windows.bat',
+            mimetype='application/x-bat'
+        )
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'Fichier non trouvé'
+        }), 404

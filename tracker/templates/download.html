@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Télécharger P2P File Sharing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .download-container {
+            padding: 60px 0;
+        }
+        
+        .download-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 50px;
+            margin-bottom: 30px;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 50px;
+        }
+        
+        .os-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .os-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        
+        .os-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .os-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .os-description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .feature-list {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .feature-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-icon {
+            color: #667eea;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .stats-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin: 10px;
+            font-weight: 600;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">
+        <i class="bi bi-arrow-left"></i> Retour au Dashboard
+    </a>
+
+    <div class="container download-container">
+        <!-- Hero Section -->
+        <div class="text-center mb-5">
+            <h1 class="hero-title">
+                <i class="bi bi-download"></i> Télécharger P2P File Sharing
+            </h1>
+            <p class="hero-subtitle">
+                Application desktop pour partager des fichiers volumineux (≥1GB) avec fragmentation distribuée
+            </p>
+            
+            <div class="stats-badge">
+                <i class="bi bi-server"></i> Tracker URL: {{ request.host_url }}
+            </div>
+        </div>
+
+        <!-- Download Options -->
+        <div class="row justify-content-center">
+            <!-- Linux -->
+            <div class="col-md-5 mb-4">
+                <div class="os-card text-center">
+                    <div class="os-icon">
+                        <i class="bi bi-ubuntu"></i>
+                    </div>
+                    <h3 class="os-title">Linux / macOS</h3>
+                    <p class="os-description">
+                        Script d'installation automatique compatible avec toutes les distributions Linux et macOS
+                    </p>
+                    <a href="/download/linux" class="download-btn">
+                        <i class="bi bi-download"></i> Télécharger pour Linux
+                    </a>
+                    
+                    <div class="code-block mt-4">
+                        <button class="copy-btn" onclick="copyToClipboard('linux-cmd')">
+                            <i class="bi bi-clipboard"></i> Copier
+                        </button>
+                        <code id="linux-cmd">chmod +x run_p2p_linux.sh && ./run_p2p_linux.sh</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Windows -->
+            <div class="col-md-5 mb-4">
+                <div class="os-card text-center">
+                    <div class="os-icon">
+                        <i class="bi bi-windows"></i>
+                    </div>
+                    <h3 class="os-title">Windows</h3>
+                    <p class="os-description">
+                        Script d'installation automatique compatible avec Windows 10/11
+                    </p>
+                    <a href="/download/windows" class="download-btn">
+                        <i class="bi bi-download"></i> Télécharger pour Windows
+                    </a>
+                    
+                    <div class="code-block mt-4">
+                        <button class="copy-btn" onclick="copyToClipboard('win-cmd')">
+                            <i class="bi bi-clipboard"></i> Copier
+                        </button>
+                        <code id="win-cmd">run_p2p_windows.bat</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="download-card">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-star-fill text-warning"></i> Fonctionnalités
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="bi bi-lightning-charge-fill feature-icon"></i>
+                            <strong>Installation automatique</strong><br>
+                            <small>Détection Python, création environnement virtuel, installation dépendances</small>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-puzzle-fill feature-icon"></i>
+                            <strong>Fragmentation distribuée</strong><br>
+                            <small>Fichiers volumineux fragmentés et distribués sur plusieurs peers</small>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-shield-check feature-icon"></i>
+                            <strong>Sécurisé</strong><br>
+                            <small>Vérification d'intégrité avec SHA-256</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="bi bi-speedometer2 feature-icon"></i>
+                            <strong>Téléchargement parallèle</strong><br>
+                            <small>Récupération simultanée depuis plusieurs sources</small>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-diagram-3-fill feature-icon"></i>
+                            <strong>Réseau P2P</strong><br>
+                            <small>Communication directe entre peers sans serveur central</small>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-ui-checks feature-icon"></i>
+                            <strong>Interface Web</strong><br>
+                            <small>Dashboard complet accessible depuis le navigateur</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="download-card">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-list-check"></i> Instructions d'installation
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <ol style="font-size: 1.1rem; line-height: 2;">
+                        <li><strong>Téléchargez</strong> le script correspondant à votre système d'exploitation</li>
+                        <li><strong>Rendez le script exécutable</strong> (Linux/macOS) ou <strong>exécutez-le</strong> (Windows)</li>
+                        <li><strong>Suivez les instructions</strong> à l'écran pour configurer votre peer</li>
+                        <li><strong>Accédez au dashboard</strong> via <code>http://localhost:8001</code></li>
+                        <li><strong>Partagez vos fichiers</strong> et commencez à utiliser le réseau P2P !</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="download-card">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-question-circle-fill"></i> Questions Fréquentes
+            </h2>
+            
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Python est-il requis ?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Oui, Python 3.8+ est nécessaire. Le script d'installation vérifie automatiquement la présence de Python et vous guide si nécessaire.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Quelle taille de fichiers puis-je partager ?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Le système est optimisé pour les fichiers volumineux (≥1GB). La fragmentation distribuée permet de partager des fichiers de plusieurs gigaoctets.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Mes données sont-elles sécurisées ?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Oui ! Chaque fragment est vérifié avec SHA-256. Les fichiers sont stockés localement sur votre machine et partagés directement avec d'autres peers.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-5">
+            <p style="font-size: 1.1rem;">
+                <i class="bi bi-github"></i> Système de Partage P2P - Tracker v1.0.0
+            </p>
+            <p style="opacity: 0.8;">
+                Tracker actif sur <strong>{{ request.host_url }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                // Feedback visuel
+                const btn = event.target.closest('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check"></i> Copié !';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+        
+        // Détection automatique de l'OS
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isWindows = userAgent.indexOf('win') !== -1;
+        const isMac = userAgent.indexOf('mac') !== -1;
+        const isLinux = userAgent.indexOf('linux') !== -1;
+        
+        if (isWindows) {
+            document.querySelector('.os-card:nth-child(2)').style.border = '3px solid #667eea';
+        } else if (isMac || isLinux) {
+            document.querySelector('.os-card:nth-child(1)').style.border = '3px solid #667eea';
+        }
+    </script>
+</body>
+</html>
