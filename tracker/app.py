@@ -3,6 +3,7 @@ Point d'entrée principal du tracker.
 Lance le serveur Flask et configure les tâches planifiées.
 """
 
+import os
 import logging
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -91,8 +92,10 @@ def main():
     config = app.config['APP_CONFIG']
     tracker_config = config['tracker']
     
+    # Utiliser le port de Railway si disponible (variable d'environnement PORT)
+    # Sinon utiliser le port de la configuration
     host = tracker_config['host']
-    port = tracker_config['port']
+    port = int(os.environ.get('PORT', tracker_config['port']))
     
     logger.info("=" * 60)
     logger.info("🚀 Démarrage du Tracker P2P")
