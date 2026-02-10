@@ -1018,7 +1018,13 @@ def download_linux():
     from flask import send_file
     import os
     
+    # Sur Railway, les fichiers sont dans /app
+    # En local, ils sont dans le dossier parent de tracker/
     script_path = os.path.join(current_app.root_path, '..', 'run_p2p_linux.sh')
+    script_path = os.path.abspath(script_path)
+    
+    logger.info(f"Tentative de téléchargement du script Linux depuis : {script_path}")
+    logger.info(f"Le fichier existe : {os.path.exists(script_path)}")
     
     if os.path.exists(script_path):
         return send_file(
@@ -1028,6 +1034,8 @@ def download_linux():
             mimetype='application/x-sh'
         )
     else:
+        logger.error(f"Fichier non trouvé : {script_path}")
+        logger.info(f"Contenu du répertoire parent : {os.listdir(os.path.dirname(script_path))}")
         return jsonify({
             'success': False,
             'error': 'Fichier non trouvé'
@@ -1040,7 +1048,13 @@ def download_windows():
     from flask import send_file
     import os
     
+    # Sur Railway, les fichiers sont dans /app
+    # En local, ils sont dans le dossier parent de tracker/
     script_path = os.path.join(current_app.root_path, '..', 'run_p2p_windows.bat')
+    script_path = os.path.abspath(script_path)
+    
+    logger.info(f"Tentative de téléchargement du script Windows depuis : {script_path}")
+    logger.info(f"Le fichier existe : {os.path.exists(script_path)}")
     
     if os.path.exists(script_path):
         return send_file(
@@ -1050,6 +1064,8 @@ def download_windows():
             mimetype='application/x-bat'
         )
     else:
+        logger.error(f"Fichier non trouvé : {script_path}")
+        logger.info(f"Contenu du répertoire parent : {os.listdir(os.path.dirname(script_path))}")
         return jsonify({
             'success': False,
             'error': 'Fichier non trouvé'
