@@ -68,6 +68,11 @@ def main():
     # Initialiser la base de données
     init_database(app)
     
+    # Appliquer les migrations automatiques
+    from tracker.migrations import apply_all_migrations
+    with app.app_context():
+        apply_all_migrations(app)
+    
     # Créer le compte admin par défaut
     with app.app_context():
         if User.create_admin_if_not_exists():

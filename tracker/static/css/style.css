@@ -1,0 +1,93 @@
+/* Tracker P2P - Styles personnalisés */
+
+/* Fix pour la navbar sur mobile */
+.navbar-brand {
+    margin-right: auto !important;
+}
+
+.navbar-toggler {
+    border: none;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+/* S'assurer que le logo reste à gauche sur mobile */
+@media (max-width: 991.98px) {
+    .navbar-brand {
+        flex: 0 0 auto;
+        margin-right: 0;
+    }
+    
+    .navbar-toggler {
+        margin-left: auto;
+    }
+    
+    /* Menu déroulant prend toute la largeur */
+    .navbar-collapse {
+        margin-top: 0.5rem;
+    }
+    
+    /* Items du menu bien espacés sur mobile */
+    .navbar-nav {
+        width: 100%;
+    }
+    
+    .navbar-nav .nav-item {
+        padding: 0.25rem 0;
+    }
+}
+
+/* Améliorer l'affichage du dropdown utilisateur */
+.dropdown-menu {
+    right: 0;
+    left: auto;
+}
+
+/* Style pour les badges */
+.badge {
+    font-weight: 500;
+}
+
+/* Cards hover effect */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Table responsive */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Alert amélioration */
+.alert {
+    border-radius: 0.375rem;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
