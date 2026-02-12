@@ -11,6 +11,27 @@
         </h1>
     </div>
 
+    <!-- Statut Peer Web de l'utilisateur -->
+    <div class="col-12 mb-3">
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-2">
+                    <i class="bi bi-wifi"></i> Votre Peer Web est Actif !
+                </h5>
+                <p class="mb-0">
+                    <strong>{{ session.get('username') }}</strong> - 
+                    Vous êtes connecté au réseau P2P. 
+                    Vous pouvez partager et télécharger des fichiers directement depuis votre navigateur.
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('web.files') }}" class="btn btn-success">
+                    <i class="bi bi-cloud-upload"></i> Partager des Fichiers
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Cartes de statistiques -->
     <div class="col-md-4 mb-3">
         <div class="card text-white bg-success">
@@ -172,11 +193,6 @@
 
 {% block extra_js %}
 <script>
-    // Auto-refresh toutes les 5 secondes
-    setInterval(() => {
-        location.reload();
-    }, 5000);
-
     // Mise à jour du timestamp
     function updateTimestamp() {
         document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
@@ -184,7 +200,7 @@
     updateTimestamp();
     setInterval(updateTimestamp, 1000);
 
-    // Mise à jour automatique des statistiques (sans recharger la page)
+    // Mise à jour automatique des statistiques (AJAX uniquement, sans recharger la page)
     let autoRefreshEnabled = true;
     let offlinePeersHidden = false;
     

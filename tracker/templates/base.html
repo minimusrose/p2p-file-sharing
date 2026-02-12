@@ -20,8 +20,10 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('web.dashboard') }}">
-                <i class="bi bi-cloud-arrow-up"></i> Tracker P2P
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('web.dashboard') }}">
+                <i class="bi bi-cloud-arrow-up fs-4 me-2"></i>
+                <span class="d-none d-sm-inline">Tracker P2P</span>
+                <span class="d-inline d-sm-none">P2P</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -31,30 +33,30 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'web.dashboard' %}active{% endif %}" 
                            href="{{ url_for('web.dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
+                            <i class="bi bi-speedometer2"></i> <span class="d-none d-lg-inline">Dashboard</span><span class="d-inline d-lg-none">Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'web.files' %}active{% endif %}" 
                            href="{{ url_for('web.files') }}">
-                            <i class="bi bi-folder"></i> Mes Fichiers
+                            <i class="bi bi-folder"></i> <span class="d-none d-lg-inline">Mes Fichiers</span><span class="d-inline d-lg-none">Fichiers</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'web.statistics' %}active{% endif %}" 
                            href="{{ url_for('web.statistics') }}">
-                            <i class="bi bi-graph-up"></i> Statistiques
+                            <i class="bi bi-graph-up"></i> <span class="d-none d-lg-inline">Statistiques</span><span class="d-inline d-lg-none">Stats</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'web.download_page' %}active{% endif %}" 
                            href="{{ url_for('web.download_page') }}">
-                            <i class="bi bi-download"></i> Télécharger l'App
+                            <i class="bi bi-download"></i> <span class="d-none d-lg-inline">Télécharger l'App</span><span class="d-inline d-lg-none">App</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/api/" target="_blank">
-                            <i class="bi bi-code-slash"></i> API
+                            <i class="bi bi-code-slash"></i> <span class="d-none d-lg-inline">API</span><span class="d-inline d-lg-none">API</span>
                         </a>
                     </li>
                     {% if session.get('user_id') %}

@@ -24,6 +24,65 @@ web_bp = Blueprint('web', __name__)
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+# ==================== HELPER FUNCTIONS FOR WEB PEERS ====================
+
+def get_or_create_web_peer(user: User) -> Peer:
+    """
+    Crée ou réactive le peer web d'un utilisateur.
+    
+    Args:
+        user: L'utilisateur connecté
+        
+    Returns:
+        Le peer web associé à l'utilisateur
+    """
+    # Chercher un peer web existant pour cet utilisateur
+    existing_peer = Peer.query.filter_by(user_id=user.id, is_web_peer=True).first()
+    
+    if existing_peer:
+        # Réactiver le peer existant
+        existing_peer.status = PEER_STATUS_ONLINE
+        existing_peer.update_heartbeat()
+        logger.info(f"Peer web réactivé pour {user.username}")
+    else:
+        # Créer un nouveau peer web
+        peer_id = f"web_{user.id}_{generate_unique_id()[:8]}"
+        new_peer = Peer(
+            id=peer_id,
+            name=f"Web - {user.username}",
+            ip_address=request.remote_addr or "127.0.0.1",
+            port=0,  # Les peers web n'ont pas de port serveur
+            status=PEER_STATUS_ONLINE,
+            is_web_peer=True,
+            user_id=user.id
+        )
+        db.session.add(new_peer)
+        
+        # Mettre à jour les statistiques
+        stats = Statistics.get_or_create()
+        stats.total_peers_registered += 1
+        
+        logger.info(f"Nouveau peer web créé pour {user.username} : {peer_id}")
+        existing_peer = new_peer
+    
+    db.session.commit()
+    return existing_peer
+
+
+def deactivate_web_peer(user: User):
+    """
+    Désactive le peer web d'un utilisateur lors de la déconnexion.
+    
+    Args:
+        user: L'utilisateur se déconnectant
+    """
+    peer = Peer.query.filter_by(user_id=user.id, is_web_peer=True).first()
+    if peer:
+        peer.status = PEER_STATUS_OFFLINE
+        db.session.commit()
+        logger.info(f"Peer web désactivé pour {user.username}")
+
+
 # ==================== AUTHENTICATION HELPER ====================
 
 def login_required(f):
@@ -604,35 +663,34 @@ def dashboard():
 
 
 @web_bp.route('/files')
+@login_required
 def files():
     """
-    Page de gestion des fichiers (nécessite authentification).
+    Page de gestion des fichiers web (upload/download direct).
     """
-    # Vérifier si l'utilisateur est connecté
-    if 'user_id' not in session:
-        flash('Veuillez vous connecter pour accéder aux fichiers.', 'warning')
-        return redirect(url_for('web.landing'))
-    
     try:
-        config = current_app.config['APP_CONFIG']
-        timeout = config['tracker']['heartbeat']['timeout']
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
         
-        # Récupérer tous les fichiers avec leurs propriétaires (relations chargées)
-        files = File.query.order_by(File.shared_at.desc()).all()
+        if not user:
+            flash('Session invalide', 'danger')
+            return redirect(url_for('auth.login'))
         
-        # Récupérer tous les peers
-        peers = Peer.query.all()
+        # Récupérer le peer web de l'utilisateur
+        web_peer = Peer.query.filter_by(user_id=user.id, is_web_peer=True).first()
         
-        # Compter les peers en ligne
-        online_peers_count = sum(1 for p in peers if p.is_online(timeout))
+        # Récupérer les fichiers uploadés par cet utilisateur (peer web)
+        my_files = []
+        if web_peer:
+            my_files = File.query.filter_by(owner_id=web_peer.id).order_by(File.shared_at.desc()).all()
         
-        # Passer directement les objets (pas de to_dict())
-        # Le template peut accéder aux relations
-        return render_template('files.html',
-                             files=files,
-                             peers=peers,
-                             timeout=timeout,
-                             online_peers_count=online_peers_count)
+        # Récupérer tous les fichiers du réseau
+        all_files = File.query.order_by(File.shared_at.desc()).all()
+        
+        return render_template('my_files.html',
+                             my_files=my_files,
+                             all_files=all_files,
+                             web_peer=web_peer)
         
     except Exception as e:
         logger.error(f"Erreur lors du chargement des fichiers: {e}", exc_info=True)
@@ -708,6 +766,11 @@ def login():
             
             # Mettre à jour last_login
             user.last_login = datetime.utcnow()
+            
+            # Créer/réactiver le peer web automatiquement
+            web_peer = get_or_create_web_peer(user)
+            session['peer_id'] = web_peer.id
+            
             db.session.commit()
             
             flash(f'Bienvenue {user.username} !', 'success')
@@ -764,6 +827,11 @@ def register():
             user = User(username=username, email=email)
             user.set_password(password)
             db.session.add(user)
+            db.session.flush()  # Pour avoir l'ID de l'utilisateur
+            
+            # Créer le peer web automatiquement
+            web_peer = get_or_create_web_peer(user)
+            
             db.session.commit()
             
             flash('Compte créé avec succès ! Vous pouvez maintenant vous connecter.', 'success')
@@ -773,6 +841,7 @@ def register():
             session['user_id'] = user.id
             session['username'] = user.username
             session['is_admin'] = user.is_admin
+            session['peer_id'] = web_peer.id
             
             return redirect(url_for('web.dashboard'))
             
@@ -792,6 +861,14 @@ def logout():
     Déconnexion de l'utilisateur.
     """
     username = session.get('username', 'Unknown')
+    user_id = session.get('user_id')
+    
+    # Désactiver le peer web
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            deactivate_web_peer(user)
+    
     session.clear()
     flash('Vous êtes déconnecté.', 'info')
     logger.info(f"Utilisateur déconnecté : {username}")
@@ -1090,3 +1167,223 @@ def download_windows():
             'success': False,
             'error': 'Fichier non trouvé'
         }), 404
+
+# ==================== ROUTES WEB PEER - UPLOAD/DOWNLOAD DIRECT ====================
+
+@web_bp.route('/web_upload', methods=['POST'])
+@login_required
+def web_upload():
+    """
+    Upload d'un fichier directement sur le serveur tracker (pour peer web).
+    Limite : 100 MB
+    """
+    import os
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'Aucun fichier fourni'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Nom de fichier vide'}), 400
+        
+        # Vérifier la taille
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        max_size = 100 * 1024 * 1024  # 100 MB
+        if file_size > max_size:
+            return jsonify({
+                'success': False,
+                'error': f'Fichier trop volumineux ({file_size / 1024 / 1024:.2f} MB). Maximum : 100 MB.'
+            }), 400
+        
+        # Récupérer l'utilisateur et son peer web
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'success': False, 'error': 'Utilisateur non trouvé'}), 401
+        
+        # Récupérer le peer web
+        web_peer = Peer.query.filter_by(user_id=user.id, is_web_peer=True).first()
+        
+        if not web_peer:
+            return jsonify({'success': False, 'error': 'Peer web non initialisé'}), 500
+        
+        # Calculer le hash du fichier
+        import hashlib
+        file_content = file.read()
+        file_hash = hashlib.sha256(file_content).hexdigest()
+        file.seek(0)
+        
+        # Sauvegarder le fichier dans web_uploads/
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(file.filename)
+        web_uploads_dir = os.path.join(current_app.root_path, '..', 'web_uploads')
+        os.makedirs(web_uploads_dir, exist_ok=True)
+        
+        # Stocker avec le hash comme nom pour éviter les collisions
+        stored_filename = f"{file_hash}_{filename}"
+        file_path = os.path.join(web_uploads_dir, stored_filename)
+        
+        # Sauvegarder le fichier
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
+        
+        logger.info(f"Fichier {filename} sauvegardé dans {file_path}")
+        
+        # Créer l'entrée dans la base de données
+        file_id = generate_unique_id()
+        new_file = File(
+            id=file_id,
+            name=filename,
+            size=file_size,
+            hash=file_hash,
+            is_chunked=False,
+            owner_id=web_peer.id,
+            uploaded_by_user_id=user.id,
+            is_private=False  # Par défaut public
+        )
+        
+        db.session.add(new_file)
+        
+        # Mettre à jour les statistiques
+        stats = Statistics.get_or_create()
+        stats.total_files_shared = File.query.count() + 1
+        
+        db.session.commit()
+        
+        logger.info(f"Fichier {filename} uploadé par {user.username} (peer web: {web_peer.id})")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Fichier "{filename}" partagé avec succès !',
+            'file_id': file_id,
+            'file_name': filename,
+            'file_size': file_size
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur upload fichier web : {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@web_bp.route('/web_download/<file_id>')
+def web_download(file_id):
+    """
+    Télécharge un fichier stocké sur le serveur tracker (peer web).
+    """
+    import os
+    try:
+        # Récupérer le fichier
+        file_record = File.query.get(file_id)
+        
+        if not file_record:
+            return jsonify({'success': False, 'error': 'Fichier non trouvé'}), 404
+        
+        # Vérifier si c'est un fichier web
+        owner_peer = Peer.query.get(file_record.owner_id)
+        
+        if not owner_peer or not owner_peer.is_web_peer:
+            return jsonify({
+                'success': False,
+                'error': 'Ce fichier n\'est pas hébergé sur le serveur web. Utilisez l\'application desktop pour le télécharger.'
+            }), 400
+        
+        # Construire le chemin du fichier
+        web_uploads_dir = os.path.join(current_app.root_path, '..', 'web_uploads')
+        stored_filename = f"{file_record.hash}_{file_record.name}"
+        file_path = os.path.join(web_uploads_dir, stored_filename)
+        
+        if not os.path.exists(file_path):
+            logger.error(f"Fichier physique non trouvé : {file_path}")
+            return jsonify({'success': False, 'error': 'Fichier physique non trouvé'}), 404
+        
+        # Incrémenter le compteur de téléchargements
+        file_record.download_count += 1
+        
+        # Mettre à jour les statistiques
+        stats = Statistics.get_or_create()
+        stats.total_downloads += 1
+        stats.total_bytes_transferred += file_record.size
+        
+        db.session.commit()
+        
+        logger.info(f"Téléchargement du fichier {file_record.name} (ID: {file_id})")
+        
+        # Envoyer le fichier
+        from flask import send_file
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=file_record.name,
+            mimetype='application/octet-stream'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erreur téléchargement fichier web : {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@web_bp.route('/web_delete/<file_id>', methods=['POST'])
+@login_required
+def web_delete(file_id):
+    """
+    Supprime un fichier uploadé par l'utilisateur connecté.
+    """
+    import os
+    try:
+        user_id = session.get('user_id')
+        
+        # Récupérer le fichier
+        file_record = File.query.get(file_id)
+        
+        if not file_record:
+            return jsonify({'success': False, 'error': 'Fichier non trouvé'}), 404
+        
+        # Vérifier que l'utilisateur est bien le propriétaire
+        if file_record.uploaded_by_user_id != user_id:
+            return jsonify({'success': False, 'error': 'Vous n\'avez pas la permission de supprimer ce fichier'}), 403
+        
+        # Supprimer le fichier physique
+        web_uploads_dir = os.path.join(current_app.root_path, '..', 'web_uploads')
+        stored_filename = f"{file_record.hash}_{file_record.name}"
+        file_path = os.path.join(web_uploads_dir, stored_filename)
+        
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Fichier physique supprimé : {file_path}")
+        
+        # Supprimer l'entrée en base de données
+        filename = file_record.name
+        db.session.delete(file_record)
+        
+        # Mettre à jour les statistiques
+        stats = Statistics.get_or_create()
+        stats.total_files_shared = File.query.count() - 1
+        
+        db.session.commit()
+        
+        logger.info(f"Fichier {filename} supprimé par user {user_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Fichier "{filename}" supprimé avec succès'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur suppression fichier web : {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

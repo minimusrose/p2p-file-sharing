@@ -12,6 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class Peer(db.Model):
     """
     Représente un peer (étudiant) connecté au réseau.
+    Peut être un peer desktop (application) ou un peer web (navigateur).
     """
     __tablename__ = 'peers'
     
@@ -20,6 +21,10 @@ class Peer(db.Model):
     ip_address = db.Column(db.String(45), nullable=False)  # IPv4 ou IPv6
     port = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), default=PEER_STATUS_ONLINE)
+    
+    # Type de peer
+    is_web_peer = db.Column(db.Boolean, default=False, index=True)  # True = peer web, False = peer desktop
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Lien vers User si peer web
     
     # Timestamps
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -47,6 +52,7 @@ class Peer(db.Model):
             'ip_address': self.ip_address,
             'port': self.port,
             'status': self.status,
+            'is_web_peer': self.is_web_peer,
             'registered_at': self.registered_at.isoformat(),
             'last_heartbeat': self.last_heartbeat.isoformat(),
             'files_count': len(self.files)
@@ -241,12 +247,15 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     
-    # Association optionnelle avec un peer
-    peer_id = db.Column(db.String(36), db.ForeignKey('peers.id'), nullable=True)
-    
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
+    
+    # Relations
+    web_peer = db.relationship('Peer', backref='web_user', lazy=True, 
+                               foreign_keys='Peer.user_id', uselist=False)
+    uploaded_files = db.relationship('File', backref='uploader', lazy=True,
+                                    foreign_keys='File.uploaded_by_user_id')
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -267,7 +276,7 @@ class User(db.Model):
             'email': self.email,
             'is_admin': self.is_admin,
             'is_active': self.is_active,
-            'peer_id': self.peer_id,
+            'has_web_peer': self.web_peer is not None,
             'created_at': self.created_at.isoformat(),
             'last_login': self.last_login.isoformat() if self.last_login else None
         }
